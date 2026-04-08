@@ -1,1 +1,20 @@
 checkpoint/*
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Mac OS files
+.DS_Store
+
+# Model files
+*.pt
+**/models/*.pt
+*.npy

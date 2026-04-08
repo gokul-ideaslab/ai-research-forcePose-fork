@@ -11,9 +11,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Training script')
 
     # General arguments
-    parser.add_argument('-d', '--dataset', default='h36m', type=str, metavar='NAME', help='target dataset') # h36m or humaneva
+    parser.add_argument('-d', '--dataset', default='force_pose', type=str, metavar='NAME', help='target dataset') # h36m or humaneva
     parser.add_argument('--dataset_root', default='data', help='Root directory for data')
-    parser.add_argument('-k', '--keypoints', default='cpn_ft_h36m_dbb', type=str, metavar='NAME', help='2D detections to use')
+    parser.add_argument('-k', '--keypoints', default='pt_coco', type=str, metavar='NAME', help='2D detections to use')
     parser.add_argument('-str', '--subjects-train', default='S1,S5,S6,S7,S8', type=str, metavar='LIST',
                         help='training subjects separated by comma')
     parser.add_argument('-ste', '--subjects-test', default='S9,S11', type=str, metavar='LIST', help='test subjects separated by comma')
@@ -21,20 +21,20 @@ def parse_args():
                         help='unlabeled subjects separated by comma for self-supervision')
     parser.add_argument('-a', '--actions', default='*', type=str, metavar='LIST',
                         help='actions to train/test on, separated by comma, or * for all')
-    parser.add_argument('-c', '--checkpoint', default='checkpoint', type=str, metavar='PATH',
+    parser.add_argument('-c', '--checkpoint', default='checkpoint/coco_2d/', type=str, metavar='PATH',
                         help='checkpoint directory')
     parser.add_argument('--checkpoint-frequency', default=40, type=int, metavar='N',
                         help='create a checkpoint every N epochs')
     parser.add_argument('-r', '--resume', default='', type=str, metavar='FILENAME',
                         help='checkpoint to resume (file name)')
     parser.add_argument('--pretrained', default='', type=str, metavar='FILENAME', help='checkpoint to finetune from (filename), restart optimizer')
-    parser.add_argument('--evaluate', default='', type=str, metavar='FILENAME', help='checkpoint to evaluate (file name)')
+    parser.add_argument('--evaluate', default='2d_81frames_t2.bin', type=str, metavar='FILENAME', help='checkpoint to evaluate (file name)')
     parser.add_argument('--save_pred', action='store_true', help='During evaluation, store 3D sequence predictions to directory in ./saved_coordinates')
     parser.add_argument('--render', action='store_true', help='visualize a particular video')
     parser.add_argument('--by-subject', action='store_true', help='break down error by subject (on evaluation)')
     parser.add_argument('--export-training-curves', action='store_true', help='save training curves as .png images')
     parser.add_argument('--filter_cameras', default=None, metavar='LIST', help='Allow these camera names only')
-    parser.add_argument('--exp_name', default='default_transformer', type=str, help='experiment name if logging')
+    parser.add_argument('--exp_name', default='eval_test', type=str, help='experiment name if logging')
 
 
     # Model arguments
@@ -55,7 +55,7 @@ def parse_args():
     # parser.add_argument('-ch', '--channels', default=1024, type=int, metavar='N', help='number of channels in convolution layers')
     parser.add_argument('--multitask', action='store_true', help='Output both 3D pose and GRF predictions during training')
     parser.add_argument('--multitask_alpha', default=1.0, type=float, help='Weighting of MPJPE loss')
-    parser.add_argument('--num_force_thresh', default=1, type=int, help='Number of thresholds for multi-part force loss')
+    parser.add_argument('--num_force_thresh', default=2, type=int, help='Number of thresholds for multi-part force loss')
     parser.add_argument('--input_pose_type', default='2d', type=str, help='Pose input type; 2d (17 keypoints), 3d (17 keypoints), or mocap (47 keypoints)')
 
     # Experimental

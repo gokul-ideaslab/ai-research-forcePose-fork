@@ -291,7 +291,7 @@ if args.resume or args.evaluate or args.pretrained:
         chk_name = args.evaluate
     chk_filename = os.path.join(args.checkpoint, chk_name)
     print('Loading checkpoint', chk_filename)
-    checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage)
+    checkpoint = torch.load(chk_filename, map_location=lambda storage, loc: storage, weights_only=False)
     print('Epoch', checkpoint['epoch'])
     model_pos_train.load_state_dict(checkpoint['model_pos'], strict=False)
     model_pos.load_state_dict(checkpoint['model_pos'], strict=False)

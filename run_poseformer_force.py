@@ -547,9 +547,7 @@ if not args.evaluate:
                         inputs_3d = inputs_3d.cuda()
                     # inputs_3d[:, :, 0] = 0
 
-                    if (
-                        args.multitask and in_chans == 2
-                    ):  # Only multitask when input is 2D
+                    if (args.multitask and in_chans == 2):  # Only multitask when input is 2D
                         predicted_3d_pos, predicted_grf = model_pos_train(inputs_2d)
                         predicted_3d_pos_flip, predicted_grf_flip = model_pos(
                             inputs_2d_flip
@@ -768,6 +766,8 @@ def evaluate(
             inputs_3d = torch.from_numpy(batch.astype("float32"))
             targ_grf = torch.from_numpy(batch_grf.astype("float32"))
 
+            print("INPUT BATCH SHAPE: ", inputs_2d.shape)
+
             ##### apply test-time-augmentation (following Videopose3d)
             inputs_2d_flip = inputs_2d.clone()
             if in_chans == 2:  # Only flip 2D inputs
@@ -940,6 +940,9 @@ if args.render:
     input_keypoints = keypoints[args.viz_subject][args.viz_action][
         args.viz_camera
     ].copy()
+    print("Input Keypoints Shape: ", input_keypoints.shape)
+
+    # input_keypoints = np.load("yolo_kps/keypoints.npy")
     # In this repo, `run_poseformer_force.py` evaluates GRF (6-axis) checkpoints.
     # The previous pose-animation render path was inconsistent with GRF-only checkpoints.
     # For render mode, we generate a GRF curve visualization (pred vs GT) for a chosen sequence.
@@ -967,7 +970,7 @@ if args.render:
         raise RuntimeError(
             "No ground-truth forces found for the requested subject/action; cannot render GRF curves."
         )
-
+    
     gen = UnchunkedGenerator(
         None,
         [positions_3d] if positions_3d is not None else [None],
@@ -979,10 +982,11 @@ if args.render:
         kps_right=kps_right,
         joints_left=joints_left,
         joints_right=joints_right,
-        forces=[forces_gt],
+        forces=None,
     )
 
     pred_grf = evaluate(gen, return_predictions=True)
+
     # `evaluate(..., return_predictions=True)` returns shape (T_out, 1, 6) for GRF.
     if pred_grf.ndim == 3 and pred_grf.shape[1] == 1:
         pred_grf = pred_grf[:, 0, :]
@@ -1010,7 +1014,7 @@ if args.render:
         gt_start_index=start,
         receptive_field=rf,
     )
-    print("Exported GRF arrays to", export_path)
+    print("Exported GRF arrays to............", export_path)
 
     # Plot predicted vs GT GRF curves
     import matplotlib

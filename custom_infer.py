@@ -102,7 +102,7 @@ def evaluate(test_generator):
 
 
 if __name__ == '__main__':
-    kps_2d = np.load("yolo_kps/keypoints_golf.npy")
+    kps_2d = np.load("yolo_kps/keypoints_general_pose_1002.npy")
 
     gen = UnchunkedGenerator(
         None,
@@ -116,6 +116,6 @@ if __name__ == '__main__':
     )
 
     pred_force = evaluate(gen)
-    np.save("yolo_kps/pred_force_golf.npy", pred_force)
+    np.save("yolo_kps/pred_force_gen.npy", pred_force)
 
     print(pred_force.shape)

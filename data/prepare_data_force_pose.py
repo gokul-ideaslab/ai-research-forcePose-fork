@@ -52,7 +52,7 @@ subject_masses = {
 		  'Subject4':86.11,
 		  'Subject5':74.91,
 		  'Subject6':111.91,
-                  'Subject7':82.64,
+          'Subject7':82.64,
 		  'Subject8':90.44}
 
 cameras =[ 

@@ -34,14 +34,14 @@ class Mlp(nn.Module):
         x = self.drop(x)
         return x
 
-
 class Attention(nn.Module):
-    def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None, attn_drop=0., proj_drop=0.):
+    def __init__(self, dim, num_heads=8, qkv_bias=False, qk_scale=None,
+                 attn_drop=0., proj_drop=0.):
         super().__init__()
+
         self.num_heads = num_heads
-        head_dim = dim // num_heads
-        # NOTE scale factor was wrong in my original version, can set manually to be compat with prev weights
-        self.scale = qk_scale or head_dim ** -0.5
+        self.head_dim = dim // num_heads
+        self.scale = float(qk_scale or (self.head_dim ** -0.5))
 
         self.qkv = nn.Linear(dim, dim * 3, bias=qkv_bias)
         self.attn_drop = nn.Dropout(attn_drop)
@@ -49,17 +49,23 @@ class Attention(nn.Module):
         self.proj_drop = nn.Dropout(proj_drop)
 
     def forward(self, x):
-        B, N, C = x.shape
-        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
-        q, k, v = qkv[0], qkv[1], qkv[2]   # make torchscript happy (cannot use tensor as tuple)
+        B = x.shape[0]
+        N = x.shape[1]
+
+        qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, self.head_dim).permute(2, 0, 3, 1, 4)
+
+        q = qkv[0]
+        k = qkv[1]
+        v = qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = attn.softmax(dim=-1)
         attn = self.attn_drop(attn)
 
-        x = (attn @ v).transpose(1, 2).reshape(B, N, C)
+        x = (attn @ v).transpose(1, 2).reshape(B, N, self.num_heads * self.head_dim)
         x = self.proj(x)
         x = self.proj_drop(x)
+
         return x
 
 
@@ -153,7 +159,10 @@ class PoseTransformer(nn.Module):
 
     def Spatial_forward_features(self, x):
         b, _, f, p = x.shape  ##### b is batch size, f is number of frames, p is number of joints
-        x = rearrange(x, 'b c f p  -> (b f) p  c', )
+        # x = rearrange(x, 'b c f p  -> (b f) p  c', )
+        b, c, f, p = x.shape
+        x = x.permute(0, 2, 3, 1).contiguous()
+        x = x.reshape(b * f, p, c)
 
         x = self.Spatial_patch_to_embedding(x)
         x += self.Spatial_pos_embed
@@ -163,7 +172,9 @@ class PoseTransformer(nn.Module):
             x = blk(x)
 
         x = self.Spatial_norm(x)
-        x = rearrange(x, '(b f) w c -> b f (w c)', f=f)
+        # x = rearrange(x, '(b f) w c -> b f (w c)', f=f)
+        x = x.reshape(b, f, p, -1)
+        x = x.reshape(b, f, p * x.shape[-1])
         return x
 
     def forward_features(self, x):
@@ -176,7 +187,8 @@ class PoseTransformer(nn.Module):
         x = self.Temporal_norm(x)
         ##### x size [b, f, emb_dim], then take weighted mean on frame dimension, we only predict 3D pose of the center frame
         x = self.weighted_mean(x)
-        x = x.view(b, 1, -1)
+        # x = x.view(b, 1, -1)
+        x = x.reshape(x.shape[0], 1, -1)
         return x
 
 
@@ -194,7 +206,8 @@ class PoseTransformer(nn.Module):
             x_grf = self.head_grf(x)
             if self.multitask:
                 x = self.head(x)
-                x = x.view(b, 1, p, -1)
+                # x = x.view(b, 1, p, -1)
+                x = x.reshape(x.shape[0], 1, p, -1)
 
                 return x, x_grf
             else:

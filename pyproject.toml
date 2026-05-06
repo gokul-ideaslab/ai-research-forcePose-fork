@@ -3,13 +3,13 @@ name = "ai-research-forcepose-fork"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12, <3.14"
 dependencies = [
+    "coremltools==8.2",
     "einops>=0.8.2",
     "h5py>=3.16.0",
     "matplotlib>=3.10.8",
-    "numpy>=2.4.4",
-    "pandas>=3.0.2",
+    "numpy==1.26.4",
     "scipy>=1.17.1",
     "timm>=1.0.26",
     "torch>=2.11.0",
